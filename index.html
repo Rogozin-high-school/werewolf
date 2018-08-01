@@ -1,0 +1,247 @@
+<html>
+    <head>
+        <title>WWO</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <script src="jquery.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+        <script>
+
+            var Role = {
+                VILLAGER: 0,
+                VETERAN: 1,
+                WITCH: 2,
+                JESTER: 3,
+                WEREWOLF: 4,
+                HEALER: 5,
+                FORTUNE_TELLER: 6,
+                PRIEST: 7,
+                ARSONIST: 8,
+                PROPHET: 9,
+                MINION: 10
+            };
+
+            var Aura = {
+                GOOD: 1,
+                BAD: 2,
+                NEUTRAL: 0,
+                CHAOTIC: 3
+            }
+
+            var RoleNames = dict(
+                [Role.VILLAGER, "Villager"],
+                [Role.VETERAN, "Veteran"],
+                [Role.WITCH, "Witch"],
+                [Role.JESTER, "Jester"],
+                [Role.WEREWOLF, "Werewolf"],
+                [Role.HEALER, "Healer"],
+                [Role.FORTUNE_TELLER, "Fortune teller"],
+                [Role.PRIEST, "Priest"],
+                [Role.ARSONIST, "Arsonist"],
+                [Role.PROPHET, "Prophet"],
+                [Role.MINION, "Minion"]
+            );
+
+            function dict() {
+                di = {};
+                for (var i = 0; i < arguments.length; i++) {
+                    di[arguments[i][0]] = arguments[i][1];
+                }
+                return di;
+            }
+            function show_role() {
+                if (window.role || window.role === 0) {
+                    $("#rolediv").fadeIn();
+                    setTimeout(function() {
+                        $("#rolediv").fadeOut();
+                    }, 1000);
+                }
+            }
+
+            function sn() {
+                $("#night").show();
+                $("#maindiv").hide();
+            }
+
+            function hn() {
+                $("#night").hide();
+                $("#maindiv").show();
+            }
+
+            function show_night_menu(txt, options, callback) {
+                sn();
+                $("#nightmenu").html("");
+                $("#nighttitle").html("<h3>" + RoleNames[window.role] + "</h3>" + txt);
+                for (var i = 0; i < options.length; i++) {
+                    (function() {
+                        var dat = options[i][0];
+                        var datp = options[i][1];
+                        var cb = callback;
+                        var $a = $("<a class='btn red'>Select</a>");
+                        $a.click(function() {
+                            hn();
+                            cb(dat, datp);
+                        });
+                        var $b = $("<li class='collection-item'></li>");
+                        var $c = $("<span>&nbsp;&nbsp;&nbsp;" + options[i][1] + "</span>");
+                        $b.append($a);
+                        $b.append($c);
+                        $("#nightmenu").append($b);
+                    })();
+                }
+            }
+
+            $(function() {
+
+                if (location.hash.length > 1) {
+                    window.nick = location.hash.substring(1);
+                }
+                else {
+                    window.nick = prompt("Game nickname?");
+                }
+                window.role = null;
+                window.w = new WebSocket("ws://" + location.hostname + ":8080/");
+
+                w.onopen = function() {
+                    w.send(JSON.stringify({type: "name_edit", name: window.nick}));
+                };
+                w.onmessage = function(d) {
+                    d = JSON.parse(d.data);
+                    console.log(d);
+                    if (d.type == "role") {
+                        window.role = d.role;
+                        $("#roleh3").text(RoleNames[window.role]);
+                        $("#roleimg").attr("src", "role" + window.role + ".png");
+                    }
+                    if (d.type == "reset") {
+                        window.role = null;
+                        hn();
+                    }
+                    if (d.type == "game_start") {
+                        //alert("Game Start");
+                    }
+                    if (d.type == "death") {
+                        $(".fullscreen").hide();
+                        $("#deathdiv").show();
+                    }
+                    if (d.type == "action") {
+                        // alert("Please cast your action");
+                        if (window.role == Role.VETERAN) {
+                            show_night_menu("Would you like to stay on alert?", [[true, "Stay on Alert"], [false, "Go to Sleep"]], function(res) {
+                                w.send(JSON.stringify({type: "night_action", data: res}));
+                            });
+                        }
+                        else if (window.role == Role.WITCH) {
+                            show_night_menu("Who would you like to cast your spell on?", d.players, function(res) {
+                                show_night_menu("New spell target?", d.players, function(res2) {
+                                    w.send(JSON.stringify({type: "night_action", data: [res, res2]}));
+                                });
+                            });
+                        }
+                        else if (window.role == Role.PRIEST) {
+                            d.players.unshift([null, "<b>Pass</b>"]);
+                            show_night_menu("Would you like to kill anyone tonight?", d.players, function(res) {
+                                w.send(JSON.stringify({type: "night_action", data: res}));
+                            });
+                        }
+                        else if (window.role == Role.FORTUNE_TELLER) {
+                            show_night_menu("Who would you like to look at?", d.players, function(res, preview) {
+                                w.send(JSON.stringify({type: "tell_fortune", data: res}));
+                            });
+                        }
+                        else if (window.role == Role.ARSONIST) {
+                            d.players.unshift([false, "<b>Burn</b>"])
+                            show_night_menu("Would you like to burn everyone or continue pouring fuel?", d.players, function(res) {
+                                w.send(JSON.stringify({type: "night_action", data: res}));
+                            });
+                        }
+                        else if (window.role == Role.PROPHET) {
+
+                        }
+                        else if (window.role == Role.MINION) {
+                            show_night_menu("Click 'continue' after you've seen the wolves.", [[false, "<b>Continue</b>"]], function(res) {
+                                w.send(JSON.stringify({type: "night_action", data: res}));
+                            });
+                        }
+                        else {
+                            show_night_menu("Please select your target:", d.players, function(res) {
+                                w.send(JSON.stringify({type: "night_action", data: res}));
+                            });
+                        }
+                    }
+                    if (d.type == "fortune") {
+                        $("#aurab").text(d.data == 1 ? "Aura: Good" : "Aura: Bad");
+                        $("#auradiv").css({backgroundColor: d.data == 1 ? "aqua" : "red"});
+                        $("#aurah1").text(d.player);
+                        $("#auradiv").fadeIn();
+                    }
+                }
+
+                $("#auradiv").click(function() {
+                    w.send(JSON.stringify({type: "night_action", data: false}));
+                    $("#auradiv").hide();
+                });
+            });
+        </script>
+        <style>
+            body {
+                margin: 0;
+            }
+
+            .fullscreen {
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 100%;
+            }
+
+            #deathdiv {
+                background-color: aqua;
+                background-image: url("death.png");
+                background-size: cover;
+                z-index: 1000;
+                display: none;
+            }
+        </style>    
+    </head>
+    <body>
+        <div class="fullscreen" id="maindiv">
+            <div class="container">
+                <div class="section"></div>
+                <center>
+                    <a class="btn" onclick="show_role();">Show Role</a>
+                    <br/>
+                    <div class="section"></div>
+                    <div id="rolediv" style="display: none;">
+                        <h3 id="roleh3">Role</h3>
+                        <img id="roleimg" />
+                    </div>
+                </center>
+            </div>
+        </div>
+        <div class="fullscreen" id="night" style="display: none;">
+            <div class="section"></div>
+            <div class="container">
+                <center><b id="nighttitle"></b></center>
+                <ul class='collection' id='nightmenu'>
+
+                </ul>
+            </div>
+        </div>
+        <div class="fullscreen" style="position: fixed; background-color: aqua; z-index: 1000; display: none;" id="auradiv" onclick="finish_seer();">
+            <div class="section"></div>
+            <center>
+                <b id="aurab">Aura</b>
+                <h1 id="aurah1">Name</h1>
+                Click anywhere to continue
+            </center>
+        </div>
+        <div id="deathdiv" class="fullscreen">
+            <div style="height: 30%">a</div>
+            <center><h1 style="background-color: white;">UR DED LOL</h1></center>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,301 @@
+<html>
+    <head>
+        <title>WWO Host</title>
+        <meta charset="utf-8" />
+        <script src="jquery.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+        <script src="http://code.responsivevoice.org/responsivevoice.js"></script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=MedievalSharp">
+        
+        <script>
+
+            function dict() {
+                di = {};
+                for (var i = 0; i < arguments.length; i++) {
+                    di[arguments[i][0]] = arguments[i][1];
+                }
+                return di;
+            }
+            var Role = {
+                VILLAGER: 0,
+                VETERAN: 1,
+                WITCH: 2,
+                JESTER: 3,
+                WEREWOLF: 4,
+                HEALER: 5,
+                FORTUNE_TELLER: 6,
+                PRIEST: 7,
+                ARSONIST: 8,
+                PROPHET: 9,
+                MINION: 10
+            };
+
+            function set_player_list(pl) {
+                var a = "";
+                for (var i = 0; i < pl.length; i++) {
+                    a += `<li class="collection-item"><a class="red btn" onclick="kick('` + pl[i][0] + `')">Kick</a>&nbsp;&nbsp;&nbsp;<b>` + pl[i][1] + `</b></li>`;
+                }
+                $("#playercollection").html(a);
+            }
+
+            function set_day_player_list(pl) {
+                var a = "";
+                for (var i = 0; i < pl.length; i++) {
+                    a += `<li class="collection-item"><a class="red btn" onclick="kill('` + pl[i][0] + `', '` + pl[i][1] + `')">Kill</a>&nbsp;&nbsp;&nbsp;<b>` + pl[i][1] + `</b></li>`;
+                }
+                $("#dayplayercollection").html(a);
+            }
+
+            function set_night_actions(na) {
+                var a = "";
+                for (var i = 0; i < na.length; i++) {
+                    a += `<li class="collection-item">` + na[i] + `</li>`;
+                }
+                $("#nightlog").html(a);
+            }
+
+            function start_game() {
+                var distribution = dict(
+                    [Role.VILLAGER, parseInt($("#villager").val()) || 0],
+                    [Role.VETERAN, parseInt($("#veteran").val()) || 0],
+                    [Role.WITCH, parseInt($("#witch").val()) || 0],
+                    [Role.JESTER, parseInt($("#jester").val()) || 0],
+                    [Role.WEREWOLF, parseInt($("#werewolf").val()) || 0],
+                    [Role.HEALER, parseInt($("#healer").val()) || 0],
+                    [Role.FORTUNE_TELLER, parseInt($("#fortune_teller").val()) || 0],
+                    [Role.PRIEST, parseInt($("#priest").val()) || 0],
+                    [Role.ARSONIST, parseInt($("#arsonist").val()) || 0],
+                    [Role.PROPHET, parseInt($("#prophet").val()) || 0],
+                    [Role.MINION, parseInt($("#minion").val()) || 0],
+                );
+                $("#lobby_audio")[0].volume = 0;
+                w.send(JSON.stringify({type: "game_start", distribution: distribution}));
+            }
+
+            function start_night() {
+                w.send(JSON.stringify({type: "night_start"}));
+            }
+
+            function set_night() {
+                $("#daydiv").hide();
+                $("#nightdiv").fadeIn();
+                $("#day_audio")[0].volume = 0;
+                $("#night_audio")[0].volume = 0.3;
+                $("#night_audio")[0].currentTime = 0;
+            }
+
+            function set_win(team, winners) {
+                $("#daydiv").hide();
+                $("#nightdiv").hide();
+                $("#maintbl").hide();
+                $("#victorydiv").fadeIn();
+                $("#day_audio")[0].volume = 0;
+                $("#night_audio")[0].volume = 0;
+                $("#lobby_audio")[0].volume = 0;
+                $("#victory_audio")[0].volume = 1;
+                $("#victory_audio")[0].currentTime = 0;
+                $("#victory_audio")[0].play();
+                $("#victory_h1").html(team);
+
+                var a = "";
+                for (var i = 0; i < winners.length; i++) {
+                    a += `<li class="collection-item">🏆 <b>` + winners[i][1].name + `</b></li>`;
+                }
+                console.log(a);
+                $("#victory_players").html(a);
+            }
+
+            function set_day() {
+                $("#nightdiv").hide();
+                $("#daydiv").fadeIn();
+                $("#day_audio")[0].volume = 0.3;
+                $("#night_audio")[0].volume = 0;
+                $("#day_audio")[0].currentTime = 0;
+            }
+
+            function kill(player, display) {
+                if (confirm("Are you sure you want to kill " + display + "?")) {
+                    w.send(JSON.stringify({type: "execute", data: player}));
+                }
+            }
+
+            function kick(player) {
+                w.send(JSON.stringify({type: "kick", data: player}));
+            }
+
+            $(function() {
+                window.w = new WebSocket("ws://localhost:8080/");
+                w.onopen = function() {
+                    w.send(JSON.stringify({type: "set_host"}));
+                };
+                w.onmessage = function(d) {
+                    d = JSON.parse(d.data);
+                    console.log(d);
+                    if (d.type == "player_list") {
+                        set_player_list(d.players);
+                    }
+                    if (d.type == "ip") {
+                        $("#iph").text(d.ip);
+                    }
+                    if (d.type == "living_players") {
+                        set_day_player_list(d.players);
+                    }
+                    if (d.type == "log") {
+                        console.log("Server log", d.log);
+                    }
+                    if (d.type == "speak") {
+                        responsiveVoice.speak(d.message, "UK English Male", {pitch: 0.8, rate: 0.9})
+                    }
+                    if (d.type == "game_start") {
+                        set_day();
+                        $("#maintbl").hide();
+                    }
+                    if (d.type == "nightfall") {
+                        set_night();
+                    }
+                    if (d.type == "sunrise") {
+                        set_day();
+                        set_day_player_list(d.players);
+                        set_night_actions(d.data);
+                    }
+                    if (d.type == "victory") {
+                        var text = d.team;
+                        if (text.constructor.name == "Array") {
+                            text = "Draw!"
+                        }
+                        else {
+                            text = ({
+                                "WEREWOLVES": "Werewolves have won!",
+                                "VILLAGE": "Village has won!",
+                                "WITCH": "Witch has won!",
+                                "ARSO": "Arsonist has won!",
+                                "DRAW": "Draw!"
+                            })[text];
+                        }
+                        set_win(text, d.winners);
+                        w.onmessage = null;
+                        w.close();
+                    }
+                }
+
+                $("#day_audio")[0].volume = 0;
+                $("#night_audio")[0].volume = 0;
+                $("#victory_audio")[0].volume = 0;
+            });
+        </script>
+        <style>
+            body {
+                margin: 0;
+                background-color: black;
+            }
+            #maintbl {
+                background-color: white;
+                table-layout: fixed;
+                top: 0;
+                bottom: 0;
+            }
+            #distrotd {
+                width: 25%;
+            }
+            #distroscroll {
+                height: 50%;
+                overflow: auto;
+            }
+            #maintd {
+                width: 75%;
+                vertical-align: top;
+            }
+            #daydiv {
+                background-image: url("https://cdn.suwalls.com/wallpapers/nature/sunny-day-above-the-old-village-41389-1920x1200.jpg");
+                width: 100%;
+                height: 100%;
+                background-position: center;
+                background-size: cover;
+                display: none;
+            }
+
+            #nightdiv {
+                background-image: url("https://www.wallpaperup.com/uploads/wallpapers/2014/02/25/275283/e7e79028e82ab228caec4cb919d1a8ad-700.jpg");
+                width: 100%;
+                height: 100%;
+                background-position: center;
+                background-size: cover;
+                display: none;
+            }
+
+            #victorydiv {
+                background-image: url("/texture.png");
+                width: 100%;
+                height: 100%;
+                background-position: center;
+                background-size: cover;
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <audio id="victory_audio" controls="controls" volume="0" hidden autoplay><source src="music_win.mp3" type="audio/mpeg"/></audio>
+        <audio id="lobby_audio" controls="controls" volume="0" hidden autoplay loop><source src="music_lobby.mp3" type="audio/mpeg"/></audio>
+        <audio id="day_audio" controls="controls" volume="0" hidden autoplay loop><source src="music_day.mp3" type="audio/mpeg"/></audio>
+        <audio id="night_audio" controls="controls" volume="0" hidden autoplay loop><source src="music_night.mp3" type="audio/mpeg"/></audio>
+        <table id="maintbl" border="3">
+            <tr>
+                <td id="maintd">
+                    <center><h4 id="iph">IP</h4></center>
+                    <ul class="collection" id="playercollection">
+                        <li class="collection-item">Hello world</li>
+                    </ul>
+                    <br/>
+                    <a class="waves-effect waves-light btn" onclick="start_game();">Start Game</a>
+                </td>
+                <td id="distrotd">
+                    <div id="distroscroll">
+                        <table>
+                            <tr><td>Werewolf</td><td><input type="number" id="werewolf"/></td></tr>
+                            <tr><td>Healer</td><td><input type="number" id="healer"/></td></tr>
+                            <tr><td>Fortune Teller</td><td><input type="number" id="fortune_teller"/></td></tr>
+                            <tr><td>Priest</td><td><input type="number" id="priest"/></td></tr>
+                            <tr><td>Arsonist</td><td><input type="number" id="arsonist"/></td></tr>
+                            <tr><td>Prophet</td><td><input type="number" id="prophet"/></td></tr>
+                            <tr><td>Minion</td><td><input type="number" id="minion"/></td></tr>
+                            <tr><td>Veteran</td><td><input type="number" id="veteran"/></td></tr>
+                            <tr><td>Witch</td><td><input type="number" id="witch"/></td></tr>
+                            <tr><td>Jester</td><td><input type="number" id="jester"/></td></tr>
+                            <tr><td>Villager</td><td><input type="number" id="villager"/></td></tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <div id="daydiv">
+            <div class="container">
+                <div class="section"></div>
+                <div class="row">
+                    <ul class="collection" id="nightlog">
+                    </ul>
+                </div>
+                <ul class="collection" id="dayplayercollection">
+                    <li class="collection-item">Player name <a class="red btn">Kill</a></li>
+                </ul>
+                <center>
+                    <a class="waves-effect waves-light btn" onclick="start_night();">Start Night</a>
+                    <a class="waves-effect waves-light btn">End Game</a>
+                </center>
+            </div>
+        </div>
+        <div id="nightdiv">
+            &nbsp;
+        </div>
+        <div id="victorydiv">
+            <div class="section" style="height: 10%"></div>
+            <div class="container">
+                <center><h1 id="victory_h1" style="font-family: 'MedievalSharp', 'fantasy';">Werewolves have won!</h1></center>
+                <ul class="collection" id="victory_players">
+                    <li class="collection-item">🏆 Yotam</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+</html>

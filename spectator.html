@@ -1,0 +1,136 @@
+<html>
+    <head>
+        <title>WWO Host</title>
+
+        <script src="jquery.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+
+        <script>
+            function dict() {
+                di = {};
+                for (var i = 0; i < arguments.length; i++) {
+                    di[arguments[i][0]] = arguments[i][1];
+                }
+                return di;
+            }
+            var Role = {
+                VILLAGER: 0,
+                VETERAN: 1,
+                WITCH: 2,
+                JESTER: 3,
+                WEREWOLF: 4,
+                HEALER: 5,
+                FORTUNE_TELLER: 6,
+                PRIEST: 7,
+                ARSONIST: 8,
+                PROPHET: 9,
+                MINION: 10
+            };
+
+            var Aura = {
+                GOOD: 1,
+                BAD: 2,
+                NEUTRAL: 0,
+                CHAOTIC: 3
+            }
+
+            var Sides = dict(
+                [Role.VILLAGER, Aura.GOOD],
+                [Role.WITCH, Aura.CHAOTIC],
+                [Role.JESTER, Aura.NEUTRAL],
+                [Role.WEREWOLF, Aura.BAD],
+                [Role.HEALER, Aura.GOOD],
+                [Role.FORTUNE_TELLER, Aura.GOOD],
+                [Role.PRIEST, Aura.GOOD],
+                [Role.ARSONIST, Aura.CHAOTIC],
+                [Role.VETERAN, Aura.GOOD],
+                [Role.PROPHET, Aura.GOOD],
+                [Role.MINION, Aura.BAD],
+                [Role.SACRIFIER, Aura.GOOD],
+            );
+
+            var RoleNames = dict(
+                [Role.VILLAGER, "Villager"],
+                [Role.VETERAN, "Veteran"],
+                [Role.WITCH, "Witch"],
+                [Role.JESTER, "Jester"],
+                [Role.WEREWOLF, "Werewolves"],
+                [Role.HEALER, "Healer"],
+                [Role.FORTUNE_TELLER, "Fortune teller"],
+                [Role.PRIEST, "Priest"],
+                [Role.ARSONIST, "Arsonist"],
+                [Role.PROPHET, "Prophet"],
+                [Role.MINION, "Minion"]
+            );
+
+            $(function() {
+                window.w = new WebSocket("ws://" + location.hostname + ":8080/");
+                w.onopen = function() {
+                    w.send(JSON.stringify({type: "spectator"}));
+                };
+                w.onmessage = function(d) {
+                    d = JSON.parse(d.data);
+                    console.log(d);
+                    if (d.type != "spectator") {
+                        return;
+                    }
+                    d = d.data;
+                    var a = "";
+                    for (var i in d) if (d.hasOwnProperty(i)) {
+                        a += `<li class='collection-item' style='font-size: 24px; background-color: ` + color(d[i]) + `'><img style='height: 50px; display:` + (d[i].role == undefined ? 'none' : 'inline') + `' src='role` + d[i].role + `.png' /><b>` + d[i].name + `</b>`
+                            + (d[i].role == undefined ? 'none' : (" - <i>" + RoleNames[d[i].role] + "</i> - "))
+                            + `</li>`;
+                    }
+                    $("#playercollection").html(a);
+                }
+            });
+
+            function color(player) {
+                if (player.alive) {
+                    if (player.role) {
+                        if (Aura.GOOD == Sides[player.role]) {
+                            return "#0f0";
+                        }
+                        else if (Aura.BAD == Sides[player.role]) {
+                            return "#c00";
+                        }
+                        else if (Aura.NEUTRAL == Sides[player.role]) {
+                            return "#09f";
+                        }
+                        else if (Aura.CHAOTIC == Sides[player.role]) {
+                            return "#909";
+                        }
+                    }
+                    else {
+                        return "#fff";
+                    }
+                }
+                else {
+                    return "#888";
+                }
+            }
+        </script>
+
+        <style>
+            #daydiv {
+                background-image: url("http://i42.tinypic.com/35bd107.jpg");
+                width: 100%;
+                height: 100%;
+                background-position: center;
+                background-size: cover;
+            }
+        </style>
+
+    </head>
+    <body>
+        <div id="daydiv">
+                <div class="container">
+                    <div class="section"></div>
+                    <ul class="collection" id="playercollection">
+                        <li class="collection-item">Player name</li>
+                    </ul>
+                </div>
+            </div>
+    </body>
+</html>
