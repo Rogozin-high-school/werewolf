@@ -32,6 +32,20 @@
                 MINION: 10
             };
 
+            var RoleNames = dict(
+                [Role.VILLAGER, "Villager"],
+                [Role.VETERAN, "Veteran"],
+                [Role.WITCH, "Witch"],
+                [Role.JESTER, "Jester"],
+                [Role.WEREWOLF, "Werewolf"],
+                [Role.HEALER, "Healer"],
+                [Role.FORTUNE_TELLER, "Fortune teller"],
+                [Role.PRIEST, "Priest"],
+                [Role.ARSONIST, "Arsonist"],
+                [Role.PROPHET, "Prophet"],
+                [Role.MINION, "Minion"]
+            );
+
             function set_player_list(pl) {
                 var a = "";
                 for (var i = 0; i < pl.length; i++) {
@@ -101,7 +115,7 @@
 
                 var a = "";
                 for (var i = 0; i < winners.length; i++) {
-                    a += `<li class="collection-item">🏆 <b>` + winners[i][1].name + `</b></li>`;
+                    a += `<li class="collection-item"` + (!winners[i][1].alive ? ` style='background-color: gray'` : "") + `>🏆 <b>` + winners[i][1].name + "</b> (" + RoleNames[winners[i][1].role] + `)</li>`;
                 }
                 console.log(a);
                 $("#victory_players").html(a);
