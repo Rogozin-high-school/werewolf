@@ -1,10 +1,13 @@
 const websocket = require("ws");
 const http = require("http");
 const fs = require("fs");
+const qr = require("qrcode");
 
 const wss = new websocket.Server({ port: 8080 });
 
 var IP_ADDR = require("ip").address();
+
+qr.toFile("ip.png", "http://" + IP_ADDR + "/");
 
 function dict() {
     di = {};
@@ -309,7 +312,7 @@ function night_move() {
     }
     else {
         log("Calling next role: " + RoleNames[NightOrder[night_index]]);
-        speak(round == 1 ? FirstNightCallouts[NightOrder[night_index]] : Callouts[NightOrder[night_index]]);
+        speak(round == 1 ? Callouts[NightOrder[night_index]] : Callouts[NightOrder[night_index]]);
     }
 
     setTimeout(function() {
@@ -696,7 +699,7 @@ var handlers = {
         send_host({type: "player_list", players: player_list()});
     }
 }
-
+console.log("Running http");
 http.createServer(function(request, response) {
     var file = request.url;
 

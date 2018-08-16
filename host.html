@@ -1,3 +1,4 @@
+
 <html>
     <head>
         <title>WWO Host</title>
@@ -17,6 +18,44 @@
                     di[arguments[i][0]] = arguments[i][1];
                 }
                 return di;
+            }
+            function role_to_dist(roles) {
+                dist = {};
+                for (var i = 0; i < roles.length; i++) {
+                    if (!dist.hasOwnProperty(roles[i])) {
+                        dist[roles[i]] = 1;
+                    }
+                    else {
+                        dist[roles[i]]++;
+                    }
+                }
+                return dist;
+            }
+            function role_text(text) {
+                var res = [];
+                var roles = {
+                    "werewolf": [Role.WEREWOLF],
+                    "healer": [Role.HEALER],
+                    "seer": [Role.FORTUNE_TELLER],
+                    "priest": [Role.PRIEST],
+                    "arsonist": [Role.ARSONIST],
+                    "minion": [Role.MINION],
+                    "veteran": [Role.VETERAN],
+                    "witch": [Role.WITCH],
+                    "jester": [Role.JESTER],
+                    "villager": [Role.VILLAGER],
+                    "rt": [Role.VILLAGER, Role.PRIEST, Role.HEALER, Role.FORTUNE_TELLER, Role.VETERAN],
+                    "tk": [Role.VETERAN, Role.PRIEST],
+                    "tp": [Role.HEALER, Role.FORTUNE_TELLER],
+                    "evil": [Role.WITCH, Role.JESTER, Role.ARSONIST],
+                    "ek": [Role.WITCH, Role.ARSONIST]
+                }
+                var text = text.split("\n");
+                for (var i = 0; i < text.length; i++) {
+                    var r = roles[text[i]];
+                    res.push(r[Math.floor(Math.random()*r.length)])
+                }
+                return res;
             }
             var Role = {
                 VILLAGER: 0,
@@ -47,7 +86,7 @@
             );
 
             function set_player_list(pl) {
-                var a = "";
+                var a = `<li class="collection-item"><center><b>` + pl.length + (pl.length == 1 ? " Player" : " Players") + " connected</b></center></li>";
                 for (var i = 0; i < pl.length; i++) {
                     a += `<li class="collection-item"><a class="red btn" onclick="kick('` + pl[i][0] + `')">Kick</a>&nbsp;&nbsp;&nbsp;<b>` + pl[i][1] + `</b></li>`;
                 }
@@ -68,6 +107,14 @@
                     a += `<li class="collection-item">` + na[i] + `</li>`;
                 }
                 $("#nightlog").html(a);
+            }
+
+            function start_game_roles() {
+                localStorage.setItem("dist", $("#textarea1").val());
+                var distribution = role_to_dist(role_text($("#textarea1").val()));
+                console.log(distribution);
+                $("#lobby_audio")[0].volume = 0;
+                w.send(JSON.stringify({type: "game_start", distribution: distribution}));
             }
 
             function start_game() {
@@ -197,6 +244,10 @@
                 $("#day_audio")[0].volume = 0;
                 $("#night_audio")[0].volume = 0;
                 $("#victory_audio")[0].volume = 0;
+
+                if (localStorage.getItem("dist")) {
+                    $("#textarea1").val(localStorage.getItem("dist"));
+                }
             });
         </script>
         <style>
@@ -257,12 +308,26 @@
         <table id="maintbl" border="3">
             <tr>
                 <td id="maintd">
-                    <center><h4 id="iph">IP</h4></center>
+                    <center>
+                        <h4 id="iph">IP</h4>
+                        <img src="ip.png" />
+                    </center>
                     <ul class="collection" id="playercollection">
                         <li class="collection-item">Hello world</li>
                     </ul>
                     <br/>
-                    <a class="waves-effect waves-light btn" onclick="start_game();">Start Game</a>
+                    <a class="waves-effect waves-light btn" onclick="start_game();">Start Game</a><br/>
+                    <div class="row">
+                        <form class="col s12">
+                          <div class="row">
+                            <div class="input-field col s12">
+                              <textarea id="textarea1" class="materialize-textarea"></textarea>
+                              <label for="textarea1">Textarea</label>
+                            </div>
+                          </div>
+                        </form>
+                    </div>
+                    <a class="waves-effect waves-light btn" onclick="start_game_roles();">Start Game</a><br/>
                 </td>
                 <td id="distrotd">
                     <div id="distroscroll">
