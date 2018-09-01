@@ -140,8 +140,7 @@ var NightOrder = [
     Role.HEALER,
     Role.FORTUNE_TELLER,
     Role.PRIEST,
-    Role.ARSONIST,
-    Role.PROPHET
+    Role.ARSONIST
 ];
 
 var FirstNightCallouts = dict(
@@ -153,7 +152,7 @@ var FirstNightCallouts = dict(
     [Role.HEALER, "Healer, wake up. Choose one player to heal. If they were attacked, they will not be killed"],
     [Role.FORTUNE_TELLER, "Fortune teller, wake up. Choose a player to look at their aura. You will see if they're good or bad."],
     [Role.PRIEST, "Priest, wake up. You can kill one player in the whole game. If you kill a player with a good aura, you die, too."],
-    [Role.ARSONIST, "Arsonist, wake up. You can pour oil in one player's house every night, then ignite all your victims houses at one."],
+    [Role.ARSONIST, "Arsonist, wake up. You can douse a player every night, then ignite all doused players at one."],
     [Role.PROPHET, "Prophet, wake up. You can choose a role and receive a hint about the players holding that role."]
 );
 
@@ -165,7 +164,7 @@ var Callouts = dict(
     [Role.HEALER, "Healer, wake up. Who would you like to heal?"],
     [Role.FORTUNE_TELLER, "Fortune teller, wake up. Who would you like to observe?"],
     [Role.PRIEST, "Priest, wake up. Would you like to kill someone?"],
-    [Role.ARSONIST, "Arsonist, wake up. Would you like to pour oil in someone's house?"],
+    [Role.ARSONIST, "Arsonist, wake up. Who would you like to douse?"],
     [Role.PROPHET, "Prophet, wake up. Which role would you like to pray for?"]
 );
 
@@ -282,9 +281,24 @@ function start_night() {
 function night_move() {
     night_players = active_players(NightOrder[night_index]);
     log("Looking for " + RoleNames[NightOrder[night_index]]);
-    while (night_players.length == 0 && night_index++ < NightOrder.length) {
-        night_players = active_players(NightOrder[night_index]);
-        log("Looking for " + RoleNames[NightOrder[night_index]]);
+    // while (night_players.length == 0 && night_index++ < NightOrder.length) {
+    //     night_players = active_players(NightOrder[night_index]);
+    //     log("Looking for " + RoleNames[NightOrder[night_index]]);
+    // }
+    console.log(NightOrder[night_index] + ": " + Role.JESTER);
+    if (night_players.length == 0 && night_index < NightOrder.length) {
+        if (NightOrder[night_index] == Role.JESTER || NightOrder[night_index] == Role.MINION) {
+            night_index++;
+            setTimeout(night_move, 1);
+            return;
+        }
+        speak(round == 1 ? Callouts[NightOrder[night_index]] : Callouts[NightOrder[night_index]]);
+        setTimeout(function() {
+            speak("Good night, " + RoleNames[NightOrder[night_index]]);
+            night_index++;
+            setTimeout(night_move, 3000);
+        }, Math.random() * 10000 + 3000);
+        return;
     }
 
     
