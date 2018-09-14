@@ -146,7 +146,7 @@ var Observations = dict(
 );
 
 var NightOrder = [
-    /*Role.VETERAN,
+    Role.VETERAN,
     Role.WITCH,
     Role.CULTIST,
     Role.JESTER,
@@ -155,9 +155,7 @@ var NightOrder = [
     Role.HEALER,
     Role.FORTUNE_TELLER,
     Role.PRIEST,
-    Role.ARSONIST*/
-    Role.CULTIST,
-    Role.VETERAN
+    Role.ARSONIST
 ];
 
 var FirstNightCallouts = dict(
@@ -258,7 +256,14 @@ var Action = dict(
     }],
     [Role.MINION, function() {}],
     [Role.CULTIST, function(player, target) {
-        players[target].role = Role.CULT_MEMBER;
+        if (players[target].role == Role.WITCH || players[target].role == Role.CULT_MEMBER || players[target].role == Role.CULTIST || players[target].aura == Aura.GOOD) {
+            players[target].role = Role.CULT_MEMBER;
+        }
+        else {
+            players[target].health -= 1;
+            players[target].death.push("a Cultist");
+        }
+
         for (var x in players) if (players.hasOwnProperty(x)) {
             sockets[x].send(JSON.stringify({type: "role", role: players[x].role}));
         }
