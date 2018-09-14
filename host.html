@@ -48,7 +48,8 @@
                     "tk": [Role.VETERAN, Role.PRIEST],
                     "tp": [Role.HEALER, Role.FORTUNE_TELLER],
                     "evil": [Role.WITCH, Role.JESTER, Role.ARSONIST],
-                    "ek": [Role.WITCH, Role.ARSONIST]
+                    "ek": [Role.WITCH, Role.ARSONIST],
+                    "cultist": [Role.CULTIST]
                 }
                 var text = text.split("\n");
                 for (var i = 0; i < text.length; i++) {
@@ -68,7 +69,9 @@
                 PRIEST: 7,
                 ARSONIST: 8,
                 PROPHET: 9,
-                MINION: 10
+                MINION: 10,
+                CULTIST: 11,
+                CULT_MEMBER: 12
             };
 
             var RoleNames = dict(
@@ -82,7 +85,9 @@
                 [Role.PRIEST, "Priest"],
                 [Role.ARSONIST, "Arsonist"],
                 [Role.PROPHET, "Prophet"],
-                [Role.MINION, "Minion"]
+                [Role.MINION, "Minion"],
+                [Role.CULTIST, "Cultist"],
+                [Role.CULT_MEMBER, "Cult member"]
             );
 
             function set_player_list(pl) {
@@ -232,7 +237,8 @@
                                 "VILLAGE": "Village has won!",
                                 "WITCH": "Witch has won!",
                                 "ARSO": "Arsonist has won!",
-                                "DRAW": "Draw!"
+                                "DRAW": "Draw!",
+                                "CULT": "Cult has won!"
                             })[text];
                         }
                         set_win(text, d.winners);

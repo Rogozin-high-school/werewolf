@@ -42,6 +42,12 @@ function speak(c) {
     send_host({type: "speak", message: c});
 }
 
+function send_roles() {
+    for (var x in players) if (players.hasOwnProperty(x)) {
+        sockets[x].send(JSON.stringify({type: "role", role: players[x].role}));
+    }
+}
+
 var players = { };
 var sockets = { };
 var round = 1;
@@ -63,7 +69,9 @@ var Role = {
     PRIEST: 7,
     ARSONIST: 8,
     PROPHET: 9,
-    MINION: 10
+    MINION: 10,
+    CULTIST: 11,
+    CULT_MEMBER: 12
 };
 
 var Aura = {
@@ -84,7 +92,9 @@ var RoleNames = dict(
     [Role.PRIEST, "Priest"],
     [Role.ARSONIST, "Arsonist"],
     [Role.PROPHET, "Prophet"],
-    [Role.MINION, "Minion"]
+    [Role.MINION, "Minion"],
+    [Role.CULTIST, "Cultist"],
+    [Role.CULT_MEMBER, "Cult member"]
 );
 
 var Distribution = dict(
@@ -114,6 +124,8 @@ var Sides = dict(
     [Role.PROPHET, Aura.GOOD],
     [Role.MINION, Aura.BAD],
     [Role.SACRIFIER, Aura.GOOD],
+    [Role.CULTIST, Aura.CHAOTIC],
+    [Role.CULT_MEMBER, Aura.CHAOTIC]
 );
 
 var Observations = dict(
@@ -129,21 +141,27 @@ var Observations = dict(
     [Role.PROPHET, Aura.GOOD],
     [Role.MINION, Aura.GOOD],
     [Role.SACRIFIER, Aura.GOOD],
+    [Role.CULTIST, Aura.BAD],
+    [Role.CULT_MEMBER, Aura.BAD]
 );
 
 var NightOrder = [
-    Role.VETERAN,
+    /*Role.VETERAN,
     Role.WITCH,
+    Role.CULTIST,
     Role.JESTER,
     Role.WEREWOLF,
     Role.MINION,
     Role.HEALER,
     Role.FORTUNE_TELLER,
     Role.PRIEST,
-    Role.ARSONIST
+    Role.ARSONIST*/
+    Role.CULTIST,
+    Role.VETERAN
 ];
 
 var FirstNightCallouts = dict(
+    [Role.CULTIST, "Cult, wake up. You can convert a player every odd night, and they will join the cult. Who would you like to convert?"],
     [Role.WITCH, "Witch, wake up. Pick your target to cast a spell on, then pick their target. They will use their ability on your chosen target instead of their target of choice."],
     [Role.JESTER, "Jester, wake up. Pick one player to kill immediately."],
     [Role.VETERAN, "Veteran, wake up. In three nights of the game, you can stay on alert. If you're on alert, every player stepping into your house will be killed. Would you like to stay on alert?"],
@@ -157,6 +175,7 @@ var FirstNightCallouts = dict(
 );
 
 var Callouts = dict(
+    [Role.CULTIST, "Cult, wake up. Who would you like to convert?"],
     [Role.WITCH, "Witch, wake up. Who would you like to cast your spell on?"],
     [Role.JESTER, "Jester, wake up. Who would you like to kill?"],
     [Role.VETERAN, "Veteran, wake up. Would you like to stay on alert?"],
@@ -237,7 +256,13 @@ var Action = dict(
             players[player].alerts -= 1;
         }
     }],
-    [Role.MINION, function() {}]
+    [Role.MINION, function() {}],
+    [Role.CULTIST, function(player, target) {
+        players[target].role = Role.CULT_MEMBER;
+        for (var x in players) if (players.hasOwnProperty(x)) {
+            sockets[x].send(JSON.stringify({type: "role", role: players[x].role}));
+        }
+    }]
 );
 
 function init_game() {
@@ -409,6 +434,16 @@ function end_night() {
         }
     }
 
+    var cultist = pcount(x => x.role == Role.CULTIST);
+    if (!cultist) {
+        for (var i in players) if (players.hasOwnProperty(i)) {
+            if (players[i].role == Role.CULT_MEMBER) {
+                players[i].role = Role.CULTIST;
+                break;
+            }
+        }
+    }
+
     for (var x in players) if (players.hasOwnProperty(x)) {
         if (!sockets[x] || sockets[x].readyState != sockets[x].OPEN) {
             delete players[x];
@@ -520,6 +555,7 @@ function pcount(l) {
 }
 
 function get_winning_team() {
+    var ps = players.length;
     var good = pcount(x => Sides[x.role] == Aura.GOOD);
     var jesters = pcount(x => x.role == Role.JESTER);
     var village = good + jesters;
@@ -528,32 +564,37 @@ function get_winning_team() {
     var arso = pcount(x => x.role == Role.ARSONIST);
     var pls = pcount(x => true);
     var healers = pcount(x => x.role == Role.HEALER);
-
+    var cult = pcount(x => x.role == Role.CULTIST || x.role == Role.CULT_MEMBER);
+    console.log("cult members: " + cult.toString());
     if (pls == 0) {
         return "DRAW";
     }
     
-    if (!werewolves && !arso && good && good < 2) {
+    if (!werewolves && !arso && !cult && good) {
         return "VILLAGE";
     }
 
-    if (witch && !good && !arso && !werewolves) {
+    if (witch && !good && !arso && !werewolves && !cult) {
         return "WITCH";
     }
 
-    if (werewolves == 1 && village == 1 && healers == 1) {
+    if (ps == 2 && werewolves == 1 && village == 1 && healers == 1) {
         return ["WEREWOLVES", "VILLAGE"];
     }
     
-    if (werewolves && !arso && !witch && !good) {
+    if (werewolves && !arso && !witch && !good && !cult) {
         return "WEREWOLVES";
     }
 
-    if (witch && !werewolves && !arso && !good) {
+    if (witch && !werewolves && !arso && !good && !cult) {
         return "WITCH";
     }
 
-    if (arso && !witch && !werewolves && !good) {
+    if (!good && !werewolves && !arso && cult) {
+        return "CULT";
+    }
+
+    if (arso && !witch && !werewolves && !good && !cult) {
         return "ARSO";
     }
 
@@ -574,9 +615,13 @@ function belongs(player, team) {
     if (player.role == Role.ARSONIST && (team == "ARSO" || ~team.indexOf("ARSO"))) {
         return true;
     }
-    if (player.role == Role.WITCH && (team == "WITCH" || ~team.indexOf("WITCH"))) {
+    if (player.role == Role.WITCH && (team == "WITCH" || team == "CULT" || ~team.indexOf("WITCH"))) {
         return true;
     }
+    if ((player.role == Role.CULT_MEMBER || player.role == Role.CULTIST) && (team == "WITCH" || team == "CULT")) {
+        return true;
+    }
+    return false;
 }
 
 function end_game(winner) {
@@ -651,9 +696,7 @@ var handlers = {
             log("Game start error: " + res);
             return;
         }
-        for (var x in players) if (players.hasOwnProperty(x)) {
-            sockets[x].send(JSON.stringify({type: "role", role: players[x].role}));
-        }
+        send_roles();
 
         send_all({type: "game_start"});
         send_host({type: "living_players", players: living_player_list()});

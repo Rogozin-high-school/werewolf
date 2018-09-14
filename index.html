@@ -20,15 +20,10 @@
                 PRIEST: 7,
                 ARSONIST: 8,
                 PROPHET: 9,
-                MINION: 10
+                MINION: 10,
+                CULTIST: 11,
+                CULT_MEMBER: 12
             };
-
-            var Aura = {
-                GOOD: 1,
-                BAD: 2,
-                NEUTRAL: 0,
-                CHAOTIC: 3
-            }
 
             var RoleNames = dict(
                 [Role.VILLAGER, "Villager"],
@@ -41,8 +36,17 @@
                 [Role.PRIEST, "Priest"],
                 [Role.ARSONIST, "Arsonist"],
                 [Role.PROPHET, "Prophet"],
-                [Role.MINION, "Minion"]
+                [Role.MINION, "Minion"],
+                [Role.CULTIST, "Cultist"],
+                [Role.CULT_MEMBER, "Cult member"]
             );
+
+            var Aura = {
+                GOOD: 1,
+                BAD: 2,
+                NEUTRAL: 0,
+                CHAOTIC: 3
+            }
 
             function dict() {
                 di = {};
