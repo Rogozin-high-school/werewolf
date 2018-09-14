@@ -435,9 +435,11 @@ function end_night() {
     }
 
     var cultist = pcount(x => x.role == Role.CULTIST);
+    console.log("Cultists left: " + cultist.toString());
     if (!cultist) {
         for (var i in players) if (players.hasOwnProperty(i)) {
-            if (players[i].role == Role.CULT_MEMBER) {
+            console.log(JSON.stringify(players[i]));
+            if (players[i].role == Role.CULT_MEMBER && players[i].alive) {
                 players[i].role = Role.CULTIST;
                 break;
             }
@@ -457,6 +459,8 @@ function end_night() {
         nights_no_killing = 0;
     }
 
+
+    send_roles();
     return s;
 }
 
