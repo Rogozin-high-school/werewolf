@@ -171,7 +171,9 @@ var Callouts = dict(
 
 var Action = dict(
     [Role.WITCH, function(player, target) {
-        players[target[0]].witch_target = target[1];
+		if (target.constructor.name == "Array") {
+			players[target[0]].witch_target = target[1];
+		}
     }],
     [Role.JESTER, function(player, target) {
         players[target].health -= 1;
@@ -194,7 +196,7 @@ var Action = dict(
         players[target].health -= 1;
         players[target].death.push("a Priest");
         players[player].priest_used = true;
-        if (Observations[players[target].role] == Aura.GOOD) {
+        if (Sides[players[target].role] == Aura.GOOD) {
             players[player].health -= 1;
             players[player].death.push("Divine Power");
         }
@@ -306,7 +308,7 @@ function night_move() {
         log("Ending night");
         result = end_night();
 
-        if (nights_no_killing == 2) {
+        if (nights_no_killing == 3) {
             end_game("DRAW");
             return;
         }
@@ -535,7 +537,7 @@ function get_winning_team() {
         return "VILLAGE";
     }
 
-    if (witch && jesters && !good && !arso && !werewolves) {
+    if (witch && !good && !arso && !werewolves) {
         return "WITCH";
     }
 
