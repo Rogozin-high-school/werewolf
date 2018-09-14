@@ -1,13 +1,11 @@
 const websocket = require("ws");
 const http = require("http");
 const fs = require("fs");
-const qr = require("qrcode");
 
 const wss = new websocket.Server({ port: 8080 });
 
 var IP_ADDR = require("ip").address();
 
-qr.toFile("ip.png", "http://" + IP_ADDR + "/");
 
 function dict() {
     di = {};
