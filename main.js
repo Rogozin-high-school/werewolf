@@ -1,6 +1,7 @@
 const websocket = require("ws");
 const http = require("http");
 const fs = require("fs");
+const path = require("path");
 
 const wss = new websocket.Server({ port: 8080 });
 
@@ -12,7 +13,7 @@ if (electron_build) {
         setTimeout(function() {
             win = new BrowserWindow({width: 800, height: 600});
             win.loadFile("host.html");
-            win.setMenu(null);
+            // win.setMenu(null);
             globalShortcut.register("CommandOrControl+f5", function() {
                 win.reload();
             });
@@ -25,10 +26,7 @@ if (electron_build) {
     });
 }
 
-
-
 var IP_ADDR = require("ip").address();
-
 
 function dict() {
     di = {};
@@ -728,6 +726,7 @@ var handlers = {
     game_start: function(ws, msg) {
         log("Starting game");
         Distribution = msg.distribution;
+        NightOrder = msg.nightorder;
 
         var res = init_game();
         if (res != true) {
@@ -801,29 +800,30 @@ console.log("Running http");
 var https = http.createServer(function(request, response) {
     var file = request.url;
 
-    var path = "index.html";
+    var filepath = path.resolve("index.html");
     var mime = "text/html";
 
     if (file == "/spectator") {
-        path = "spectator.html";
+        filepath = path.resolve("spectator.html");
     }
     else if (file == "/host") {
-        path = "host.html";
+        filepath = path.resolve("host.html");
     }
     else if (file.endsWith(".mp3")) {
-        path = file.substring(1);
-        mime = "audio/mpeg";
+        filepath = file.substring(1);
+        mime = path.resolve("audio/mpeg");
     }
     else if (file == "/jquery.js") {
-        path = "jquery.js";
+        filepath = path.resolve("jquery.js");
         mime = "text/javascript";
     }
     else if (file.endsWith(".png")) {
-        path = file.substring(1);
-        mime = "image/png";
+        filepath = path.resolve(file.substring(1));
+        mime = path.resolve("image/png");
     }
-
-    fs.readFile(path, function(err, content) {
+    
+    console.log("Reading file : " + filepath + " (from string " + file + ")");
+    fs.readFile(filepath, function(err, content) {
         if (err) {
             response.writeHead(404);
             response.end("Sorry, the resource was not found on the server");

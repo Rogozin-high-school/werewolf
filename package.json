@@ -31,5 +31,16 @@
   "scripts": {
 	  "start": "electron ."
   },
-  "files": ["*"]
+  "build": {
+	  "files": [
+		"*"
+	  ],
+	  "extraFiles": [
+		"role*.png",
+		"index.html",
+		"spectator.html",
+		"jquery.js",
+		"materialize.min.css"
+	  ]
+  }
 }

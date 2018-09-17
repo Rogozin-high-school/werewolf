@@ -4,9 +4,9 @@
         <title>Werewolf Online</title>
         <meta charset="utf-8" />
         <script src="jquery.js"></script>
-        <script>if (window.require) { window.$ = require("./jquery.js"); }</script> 
+        <script>if (window.require) { window.$ = require("./jquery.host.js"); }</script> 
         
-        <link rel="stylesheet" href="materialize.min.css">
+        <link rel="stylesheet" href="materialize.host.min.css">
         <script src="materialize.min.js"></script>
 
         <script src="responsivevoice.js"></script>
@@ -33,33 +33,7 @@
                 }
                 return dist;
             }
-            function role_text(text) {
-                var res = [];
-                var roles = {
-                    "werewolf": [Role.WEREWOLF],
-                    "healer": [Role.HEALER],
-                    "seer": [Role.FORTUNE_TELLER],
-                    "priest": [Role.PRIEST],
-                    "arsonist": [Role.ARSONIST],
-                    "minion": [Role.MINION],
-                    "veteran": [Role.VETERAN],
-                    "witch": [Role.WITCH],
-                    "jester": [Role.JESTER],
-                    "villager": [Role.VILLAGER],
-                    "rt": [Role.VILLAGER, Role.PRIEST, Role.HEALER, Role.FORTUNE_TELLER, Role.VETERAN],
-                    "tk": [Role.VETERAN, Role.PRIEST],
-                    "tp": [Role.HEALER, Role.FORTUNE_TELLER],
-                    "evil": [Role.WITCH, Role.JESTER, Role.ARSONIST],
-                    "ek": [Role.WITCH, Role.ARSONIST],
-                    "cultist": [Role.CULTIST]
-                }
-                var text = text.split("\n");
-                for (var i = 0; i < text.length; i++) {
-                    var r = roles[text[i]];
-                    res.push(r[Math.floor(Math.random()*r.length)])
-                }
-                return res;
-            }
+
             var Role = {
                 VILLAGER: 0,
                 VETERAN: 1,
@@ -92,6 +66,52 @@
                 [Role.CULT_MEMBER, "Cult member"]
             );
 
+            var NightOrder = [
+                Role.VETERAN,
+                Role.WITCH,
+                Role.CULTIST,
+                Role.JESTER,
+                Role.WEREWOLF,
+                Role.MINION,
+                Role.HEALER,
+                Role.FORTUNE_TELLER,
+                Role.PRIEST,
+                Role.ARSONIST
+            ];
+
+            window.possibilities = [];
+            function role_text(text) {
+                var res = [];
+                window.possibilities = [];
+                var roles = {
+                    "werewolf": [Role.WEREWOLF],
+                    "healer": [Role.HEALER],
+                    "seer": [Role.FORTUNE_TELLER],
+                    "priest": [Role.PRIEST],
+                    "arsonist": [Role.ARSONIST],
+                    "minion": [Role.MINION],
+                    "veteran": [Role.VETERAN],
+                    "witch": [Role.WITCH],
+                    "jester": [Role.JESTER],
+                    "villager": [Role.VILLAGER],
+                    "rt": [Role.VILLAGER, Role.PRIEST, Role.HEALER, Role.FORTUNE_TELLER, Role.VETERAN],
+                    "tk": [Role.VETERAN, Role.PRIEST],
+                    "tp": [Role.HEALER, Role.FORTUNE_TELLER],
+                    "evil": [Role.WITCH, Role.JESTER, Role.ARSONIST],
+                    "ek": [Role.WITCH, Role.ARSONIST],
+                    "cultist": [Role.CULTIST]
+                }
+                var text = text.split("\n");
+                for (var i = 0; i < text.length; i++) {
+                    var r = roles[text[i]];
+                    for (var x of r) {
+                        window.possibilities.push(x);
+                    }
+                    res.push(r[Math.floor(Math.random()*r.length)])
+                }
+                return res;
+            }
+
             function set_player_list(pl) {
                 var a = `<li class="collection-item"><center><b>` + pl.length + (pl.length == 1 ? " Player" : " Players") + " connected</b></center></li>";
                 for (var i = 0; i < pl.length; i++) {
@@ -119,9 +139,17 @@
             function start_game_roles() {
                 localStorage.setItem("dist", $("#textarea1").val());
                 var distribution = role_to_dist(role_text($("#textarea1").val()));
+
+                var order = [];
+                for (var x of NightOrder) {
+                    if (~window.possibilities.indexOf(x)) {
+                        order.push(x);
+                    }
+                }
+
                 console.log(distribution);
                 $("#lobby_audio")[0].volume = 0;
-                w.send(JSON.stringify({type: "game_start", distribution: distribution}));
+                w.send(JSON.stringify({type: "game_start", distribution: distribution, nightorder: order}));
             }
 
             function start_game() {
