@@ -672,15 +672,8 @@ wss.on("connection", function(ws) {
     });
 
     ws.on("close", function() {
-        if (in_game) {
-            if (players[ws.id]) {
-                players[ws.id].alive = false;
-            }
-        }
-        else {
-            delete players[ws.id];
-            delete sockets[ws.id];
-        }
+        delete players[ws.id];
+        delete sockets[ws.id];
         if (in_game) {
             send_host({type: "living_players", players: living_player_list()});
         } else {
