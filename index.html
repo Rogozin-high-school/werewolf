@@ -116,6 +116,9 @@
                 w.onopen = function() {
                     w.send(JSON.stringify({type: "name_edit", name: window.nick}));
                 };
+                w.onclose = function() {
+                    alert("Connection lost!");
+                }
                 w.onmessage = function(d) {
                     d = JSON.parse(d.data);
                     console.log(d);
