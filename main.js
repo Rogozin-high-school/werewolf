@@ -16,6 +16,11 @@ if (electron_build) {
             globalShortcut.register("CommandOrControl+f5", function() {
                 win.reload();
             });
+            win.on("close", function() {
+                wss.close();
+                https.close();
+                app.quit();
+            });
         }, 1500);
     });
 }
@@ -785,7 +790,7 @@ var handlers = {
     }
 }
 console.log("Running http");
-http.createServer(function(request, response) {
+var https = http.createServer(function(request, response) {
     var file = request.url;
 
     var path = "index.html";
@@ -822,4 +827,5 @@ http.createServer(function(request, response) {
             response.end();
         }
     });
-}).listen(80);
+});
+https.listen(80);
