@@ -270,6 +270,8 @@
                 top: 0;
                 bottom: 0;
                 height: 99%;
+                background-image: url("medieval.jpg");
+                background-size: cover;
             }
             #distrotd {
                 width: 25%;
@@ -315,9 +317,11 @@
         <audio id="lobby_audio" controls="controls" volume="0" hidden autoplay loop><source src="music_lobby.mp3" type="audio/mpeg"/></audio>
         <audio id="day_audio" controls="controls" volume="0" hidden autoplay loop><source src="music_day.mp3" type="audio/mpeg"/></audio>
         <audio id="night_audio" controls="controls" volume="0" hidden autoplay loop><source src="music_night.mp3" type="audio/mpeg"/></audio>
+        
         <table id="maintbl" border="3">
             <tr>
                 <td id="maintd">
+                    <div class="container">
                     <center>
                         <h4 id="iph">IP</h4>
                     </center>
@@ -325,20 +329,21 @@
                         <li class="collection-item">Hello world</li>
                     </ul>
                     <br/>
-                    <a class="waves-effect waves-light btn" onclick="start_game();">Start Game</a><br/>
+                    <!--<a class="waves-effect waves-light btn" onclick="start_game();">Start Game</a><br/>-->
                     <div class="row">
                         <form class="col s12">
                           <div class="row">
                             <div class="input-field col s12">
-                              <textarea id="textarea1" class="materialize-textarea"></textarea>
+                              <textarea id="textarea1" class="materialize-textarea white"></textarea>
                               <label for="textarea1">Textarea</label>
                             </div>
                           </div>
                         </form>
                     </div>
                     <a class="waves-effect waves-light btn" onclick="start_game_roles();">Start Game</a><br/>
+                    </div>
                 </td>
-                <td id="distrotd">
+                <!--<td id="distrotd">
                     <div id="distroscroll">
                         <table>
                             <tr><td>Werewolf</td><td><input type="number" id="werewolf"/></td></tr>
@@ -354,7 +359,7 @@
                             <tr><td>Villager</td><td><input type="number" id="villager"/></td></tr>
                         </table>
                     </div>
-                </td>
+                </td>-->
             </tr>
         </table>
         <div id="daydiv">
@@ -369,7 +374,7 @@
                 </ul>
                 <center>
                     <a class="waves-effect waves-light btn" onclick="start_night();">Start Night</a>
-                    <a class="waves-effect waves-light btn">End Game</a>
+                    <a class="waves-effect waves-light btn" onclick="location.reload();">End Game</a>
                 </center>
             </div>
         </div>
