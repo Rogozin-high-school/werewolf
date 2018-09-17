@@ -74,6 +74,11 @@
                 $("#maindiv").show();
             }
 
+            function addpass(arr) {
+                arr.unshift([null, "<b>Pass</b>"]);
+                return arr;
+            }
+
             function show_night_menu(txt, options, callback) {
                 sn();
                 $("#nightmenu").html("");
@@ -138,20 +143,29 @@
                             });
                         }
                         else if (window.role == Role.WITCH) {
-                            show_night_menu("Who would you like to cast your spell on?", d.players, function(res) {
-                                show_night_menu("New spell target?", d.players, function(res2) {
-                                    w.send(JSON.stringify({type: "night_action", data: [res, res2]}));
-                                });
+                            show_night_menu("Who would you like to cast your spell on?", addpass(d.players), function(res) {
+                                if (!res) {
+                                    w.send(JSON.stringify({type: "night_action", data: null}));
+                                }
+                                else {
+                                    show_night_menu("New spell target?", d.players, function(res2) {
+                                        w.send(JSON.stringify({type: "night_action", data: [res, res2]}));
+                                    });
+                                }
                             });
                         }
                         else if (window.role == Role.PRIEST) {
-                            d.players.unshift([null, "<b>Pass</b>"]);
-                            show_night_menu("Would you like to kill anyone tonight?", d.players, function(res) {
+                            show_night_menu("Would you like to kill anyone tonight?", addpass(d.players), function(res) {
+                                w.send(JSON.stringify({type: "night_action", data: res}));
+                            });
+                        }
+                        else if (window.role == Role.CULTIST) {
+                            show_night_menu("Who would you like to convert tonight?", addpass(d.players), function(res) {
                                 w.send(JSON.stringify({type: "night_action", data: res}));
                             });
                         }
                         else if (window.role == Role.FORTUNE_TELLER) {
-                            show_night_menu("Who would you like to look at?", d.players, function(res, preview) {
+                            show_night_menu("Who would you like to look at?", addpass(d.players), function(res, preview) {
                                 w.send(JSON.stringify({type: "tell_fortune", data: res}));
                             });
                         }
@@ -170,7 +184,7 @@
                             });
                         }
                         else {
-                            show_night_menu("Please select your target:", d.players, function(res) {
+                            show_night_menu("Please select your target:", addpass(d.players), function(res) {
                                 w.send(JSON.stringify({type: "night_action", data: res}));
                             });
                         }

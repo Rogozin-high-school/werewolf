@@ -228,15 +228,21 @@ var Action = dict(
 		}
     }],
     [Role.JESTER, function(player, target) {
-        players[target].health -= 1;
-        players[target].death.push("a Jester");
+        if (target) {
+            players[target].health -= 1;
+            players[target].death.push("a Jester");
+        }
     }],
     [Role.WEREWOLF, function(player, target) {
-        players[target].health -= 1;
-        players[target].death.push("the Werewolves");
+        if (target) {
+            players[target].health -= 1;
+            players[target].death.push("the Werewolves");
+        }
     }],
     [Role.HEALER, function(player, target) {
-        players[target].health += 1.1;
+        if (target) {
+            players[target].health += 1.1;
+        }
     }],
     [Role.FORTUNE_TELLER, function(player, target) {
         return;
@@ -291,6 +297,8 @@ var Action = dict(
     }],
     [Role.MINION, function() {}],
     [Role.CULTIST, function(player, target) {
+        if (!target) return;
+        
         if (players[target].role == Role.WITCH || players[target].role == Role.CULT_MEMBER || players[target].role == Role.CULTIST || Sides[players[target].role] == Aura.GOOD) {
             players[target].role = Role.CULT_MEMBER;
         }

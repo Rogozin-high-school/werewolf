@@ -30,5 +30,6 @@
   "homepage": "https://github.com/rogozin-high-school/werewolf#readme",
   "scripts": {
 	  "start": "electron ."
-  }
+  },
+  "files": ["*"]
 }
