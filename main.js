@@ -46,6 +46,20 @@ function send_roles() {
     }
 }
 
+function check_cultists() {
+    var cultist = pcount(x => x.role == Role.CULTIST);
+    console.log("Cultists left: " + cultist.toString());
+    if (!cultist) {
+        for (var i in players) if (players.hasOwnProperty(i)) {
+            console.log(JSON.stringify(players[i]));
+            if (players[i].role == Role.CULT_MEMBER && players[i].alive) {
+                players[i].role = Role.CULTIST;
+                break;
+            }
+        }
+    }
+}
+
 var players = { };
 var sockets = { };
 var round = 1;
@@ -254,7 +268,7 @@ var Action = dict(
     }],
     [Role.MINION, function() {}],
     [Role.CULTIST, function(player, target) {
-        if (players[target].role == Role.WITCH || players[target].role == Role.CULT_MEMBER || players[target].role == Role.CULTIST || players[target].aura == Aura.GOOD) {
+        if (players[target].role == Role.WITCH || players[target].role == Role.CULT_MEMBER || players[target].role == Role.CULTIST || Sides[players[target].role] == Aura.GOOD) {
             players[target].role = Role.CULT_MEMBER;
         }
         else {
@@ -327,7 +341,7 @@ function night_move() {
             speak("Good night, " + RoleNames[NightOrder[night_index]]);
             night_index++;
             setTimeout(night_move, 3000);
-        }, Math.random() * 10000 + 3000);
+        }, Math.random() * 10000 + 1000);
         return;
     }
 
@@ -437,17 +451,7 @@ function end_night() {
         }
     }
 
-    var cultist = pcount(x => x.role == Role.CULTIST);
-    console.log("Cultists left: " + cultist.toString());
-    if (!cultist) {
-        for (var i in players) if (players.hasOwnProperty(i)) {
-            console.log(JSON.stringify(players[i]));
-            if (players[i].role == Role.CULT_MEMBER && players[i].alive) {
-                players[i].role = Role.CULTIST;
-                break;
-            }
-        }
-    }
+    check_cultists();
 
     for (var x in players) if (players.hasOwnProperty(x)) {
         if (!sockets[x] || sockets[x].readyState != sockets[x].OPEN) {
@@ -477,6 +481,8 @@ function execute(player) {
     else {
         sockets[player].send(JSON.stringify({type: "death"}));
     }
+
+    check_cultists();
 }
 
 function active_players(role) {
@@ -633,7 +639,9 @@ function belongs(player, team) {
 
 function end_game(winner) {
     var winners = listify(players).filter(x => belongs(x[1], winner) || x.winner);
-    send_host({type: "victory", team: winner, winners: winners});
+    setTimeout(function() {
+        send_host({type: "victory", team: winner, winners: winners});
+    }, 3000);
     in_game = false;
 }
 
