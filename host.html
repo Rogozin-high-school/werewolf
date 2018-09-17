@@ -1,14 +1,16 @@
 
 <html>
     <head>
-        <title>WWO Host</title>
+        <title>Werewolf Online</title>
         <meta charset="utf-8" />
         <script src="jquery.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/css/materialize.min.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-rc.2/js/materialize.min.js"></script>
+        <script>if (window.require) { window.$ = require("./jquery.js"); }</script> 
+        
+        <link rel="stylesheet" href="materialize.min.css">
+        <script src="materialize.min.js"></script>
 
-        <script src="http://code.responsivevoice.org/responsivevoice.js"></script>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=MedievalSharp">
+        <script src="responsivevoice.js"></script>
+        <link rel="stylesheet" href="googlefonts.css">
         
         <script>
 
@@ -123,6 +125,7 @@
             }
 
             function start_game() {
+                window.style.backgroundColor = "black";
                 var distribution = dict(
                     [Role.VILLAGER, parseInt($("#villager").val()) || 0],
                     [Role.VETERAN, parseInt($("#veteran").val()) || 0],
@@ -259,19 +262,20 @@
         <style>
             body {
                 margin: 0;
-                background-color: black;
+                background-color: white;
             }
             #maintbl {
                 background-color: white;
                 table-layout: fixed;
                 top: 0;
                 bottom: 0;
+                height: 99%;
             }
             #distrotd {
                 width: 25%;
             }
             #distroscroll {
-                height: 50%;
+                height: 100%;
                 overflow: auto;
             }
             #maintd {

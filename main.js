@@ -4,6 +4,24 @@ const fs = require("fs");
 
 const wss = new websocket.Server({ port: 8080 });
 
+const electron_build = true;
+
+if (electron_build) {
+    const {app, BrowserWindow, globalShortcut} = require("electron");
+    app.on("ready", function() {
+        setTimeout(function() {
+            win = new BrowserWindow({width: 800, height: 600});
+            win.loadFile("host.html");
+            win.setMenu(null);
+            globalShortcut.register("CommandOrControl+f5", function() {
+                win.reload();
+            });
+        }, 1500);
+    });
+}
+
+
+
 var IP_ADDR = require("ip").address();
 
 
