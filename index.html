@@ -111,7 +111,7 @@
                     window.nick = prompt("Game nickname?");
                 }
                 window.role = null;
-                window.w = new WebSocket("ws://selfhosted.website:24223/");
+                window.w = new WebSocket("wss://werewolf.selfhosted.website:24223/");
 
                 w.onopen = function() {
                     w.send(JSON.stringify({type: "name_edit", name: window.nick}));
