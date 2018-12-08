@@ -4,28 +4,6 @@ const fs = require("fs");
 const path = require("path");
 
 const wss = new websocket.Server({ port: 24223 });
-
-const electron_build = false;
-
-if (electron_build) {
-    const {app, BrowserWindow, globalShortcut} = require("electron");
-    app.on("ready", function() {
-        setTimeout(function() {
-            win = new BrowserWindow({width: 800, height: 600});
-            win.loadFile("host.html");
-            // win.setMenu(null);
-            globalShortcut.register("CommandOrControl+f5", function() {
-                win.reload();
-            });
-            win.on("close", function() {
-                wss.close();
-                https.close();
-                app.quit();
-            });
-        }, 1500);
-    });
-}
-
 var IP_ADDR = "werewolf.selfhosted.website";//require("ip").address();
 
 function dict() {
