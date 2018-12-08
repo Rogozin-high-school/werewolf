@@ -3,9 +3,9 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const wss = new websocket.Server({ port: 8080 });
+const wss = new websocket.Server({ port: 24223 });
 
-const electron_build = true;
+const electron_build = false;
 
 if (electron_build) {
     const {app, BrowserWindow, globalShortcut} = require("electron");
@@ -26,7 +26,7 @@ if (electron_build) {
     });
 }
 
-var IP_ADDR = require("ip").address();
+var IP_ADDR = "werewolf.selfhosted.website";//require("ip").address();
 
 function dict() {
     di = {};
@@ -796,44 +796,5 @@ var handlers = {
         send_host({type: "player_list", players: player_list()});
     }
 }
-console.log("Running http");
-var https = http.createServer(function(request, response) {
-    var file = request.url;
 
-    var filepath = path.resolve("index.html");
-    var mime = "text/html";
-
-    if (file == "/spectator") {
-        filepath = path.resolve("spectator.html");
-    }
-    else if (file == "/host") {
-        filepath = path.resolve("host.html");
-    }
-    else if (file.endsWith(".mp3")) {
-        filepath = file.substring(1);
-        mime = path.resolve("audio/mpeg");
-    }
-    else if (file == "/jquery.js") {
-        filepath = path.resolve("jquery.js");
-        mime = "text/javascript";
-    }
-    else if (file.endsWith(".png")) {
-        filepath = path.resolve(file.substring(1));
-        mime = path.resolve("image/png");
-    }
-    
-    console.log("Reading file : " + filepath + " (from string " + file + ")");
-    fs.readFile(filepath, function(err, content) {
-        if (err) {
-            response.writeHead(404);
-            response.end("Sorry, the resource was not found on the server");
-            response.end();
-        }
-        else {
-            response.writeHead(200, {"Content-Type": mime});
-            response.end(content, "utf-8");
-            response.end();
-        }
-    });
-});
-https.listen(80);
+console.log("Websocket server running")
