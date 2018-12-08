@@ -1,9 +1,17 @@
 const websocket = require("ws");
-const http = require("http");
+//const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const wss = new websocket.Server({ port: 24223 });
+const cert = fs.readFileSync("/etc/letsencrypt/live/werewolf.selfhosted.website/fullchain.pem");
+const cert_key = fs.readFileSync("/etc/letsencrypt/live/werewolf.selfhosted.website/privkey.pem");
+
+const https = require("https");
+var httpsServer = https.createServer({cert: cert, key: cert_key});
+
+httpsServer.listen(24223);
+const wss = new websocket.Server({ server: httpsServer });
+
 var IP_ADDR = "werewolf.selfhosted.website";//require("ip").address();
 
 function dict() {
